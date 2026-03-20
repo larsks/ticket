@@ -60,3 +60,10 @@ Feature: Ticket Status Management
     When I run "ticket status 0001 in_progress"
     Then the command should succeed
     And ticket "test-0001" should have field "status" with value "in_progress"
+
+  Scenario: Starting an already in-progress ticket fails
+    Given ticket "test-0001" has status "in_progress"
+    When I run "ticket start test-0001"
+    Then the command should fail
+    And the output should contain "already in progress"
+    And ticket "test-0001" should have field "status" with value "in_progress"

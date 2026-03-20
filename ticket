@@ -278,7 +278,27 @@ cmd_start() {
         echo "Usage: $(basename "$0") start <id>" >&2
         return 1
     fi
-    cmd_status "$1" "in_progress"
+    if ! command -v flock &>/dev/null; then
+        echo "Error: 'flock' is required for atomic start (install util-linux)" >&2
+        return 1
+    fi
+    local ticket
+    ticket=$(ticket_path "$1") || return 1
+
+    # Acquire exclusive lock on the ticket file itself.
+    # fd 200 stays open for the life of the process and is released on exit.
+    exec 200<>"$ticket"
+    flock -x 200
+
+    local current_status
+    current_status=$(yaml_field "$ticket" "status")
+    if [[ "$current_status" == "in_progress" ]]; then
+        echo "Error: ticket '$1' is already in progress" >&2
+        return 1
+    fi
+
+    update_yaml_field "$ticket" "status" "in_progress"
+    echo "Updated $(basename "$ticket" .md) -> in_progress"
 }
 
 cmd_close() {
