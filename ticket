@@ -243,7 +243,7 @@ cmd_create() {
 }
 
 # Valid statuses
-VALID_STATUSES="open in_progress closed"
+VALID_STATUSES="open in_progress closed ignore"
 
 validate_status() {
     local status="$1"
